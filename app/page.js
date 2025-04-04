@@ -6,6 +6,10 @@ export default function Home() {
 
     const [ produtos, alteraProdutos ] = useState([])
 
+    const [ nome, alteraNome] = useState([])
+    const [ preco, alteraPreco] = useState([])
+    const[ quantidade, alteraQuantidade] = useState ([])
+
     async function buscaTodos(){
         const response = await axios.get("http://localhost:3000/api/produtos")
         alteraProdutos( response.data )
@@ -13,7 +17,28 @@ export default function Home() {
 
     function buscaPorID(){}
     function buscaPorNome(){}
-    function insereProduto(){}
+
+    async function insereProduto(e){
+
+        e.preventDefault()
+
+        
+        const objeto = {
+
+            nome: nome,
+            preco: preco,
+            quantidade: quantidade
+        }
+        
+        const response = await axios.post("http://localhost:3000/api/produtos", objeto)
+        console.log(response)
+
+        buscaTodos()
+
+
+
+    }
+
     function atualizaProduto(){}
     function removeProduto(){}
 
@@ -106,12 +131,12 @@ export default function Home() {
 
             <h2>Cadastro</h2>
 
-            <form>
-                <label> Digite o nome do produto: <br/> <input/> </label>
+            <form onSubmit= { (e)=>  insereProduto (e) }>
+                <label> Digite o nome do produto: <br/> <input onChange={(e)=> alteraNome(e.target.value)} /> </label>
                 <br/>
-                <label> Digite o preço: <br/> <input/> </label>
+                <label> Digite o preço: <br/> <input onChange={(e)=> alteraPreco(e.target.value)} /> </label>
                 <br/>
-                <label> Digite a quantidade: <br/> <input/> </label>
+                <label> Digite a quantidade: <br/> <input onChange={(e)=> alteraQuantidade(e.target.value)} /> </label>
                 <br/>
                 <button>Salvar</button>
             </form>
