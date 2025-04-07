@@ -1,5 +1,6 @@
 'use client'
 import axios from "axios";
+import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -8,14 +9,23 @@ export default function Home() {
 
     const [ nome, alteraNome] = useState([])
     const [ preco, alteraPreco] = useState([])
-    const[ quantidade, alteraQuantidade] = useState ([])
+    const [ quantidade, alteraQuantidade] = useState ([])
+
+    const [ editando, alteraEditando ] = useState(0)
+
+    const [pesquisa, alteraPesquisa ] = useState("")
 
     async function buscaTodos(){
         const response = await axios.get("http://localhost:3000/api/produtos")
         alteraProdutos( response.data )
     }
 
-    function buscaPorID(){}
+    async function buscaPorID( id ) {
+        const response = await axios.get("http://localhost:3000/api/produtos/"+id)
+        alteraProdutos( response.data )
+    }
+
+
     function buscaPorNome(){}
 
     async function insereProduto(e){
@@ -35,12 +45,34 @@ export default function Home() {
 
         buscaTodos()
 
-
-
     }
 
-    function atualizaProduto(){}
-    function removeProduto(){}
+    async function atualizaProduto(){
+        const objeto = {
+
+            nome: nome,
+            preco: preco,
+            quantidade: quantidade
+        }
+
+        console.log(editando)
+        console.log(objeto)
+
+        const response = await axios.put("http://localhost:3000/api/produtos/"+editando, objeto)
+
+        buscaTodos()
+
+        alteraEditando(0)
+        alteraNome("")
+        alteraPreco("")
+        alteraQuantidade("")
+    }
+
+    async function removeProduto( id ){
+        await axios.delete ("http://localhost:3000/api/produtos/"+id)
+        buscaTodos()
+
+    }
 
     function formataData( valor ){
         let data = valor.split("T")[0]
@@ -57,6 +89,24 @@ export default function Home() {
         return data+" às "+hora
 
     }
+    
+    function montaEdicao( produto ){
+        alteraEditando( produto.id)
+        alteraNome( produto.nome )
+        alteraPreco( produto.preco )
+        alteraQuantidade( produto.quantidade )
+    }
+
+    function enviaFormulario(e){
+        e.preventDefault()
+
+        if(editando == 0){
+            insereProduto()
+        }else{
+            atualizaProduto()
+        }
+    }
+
 
     useEffect( ()=> {
         buscaTodos()
@@ -99,6 +149,10 @@ export default function Home() {
 
             <hr/>
 
+            <p> Busca de produtos. Digite o ID</p>
+            <input onChange ={ (e)=> alteraPesquisa(e.target.value) } />
+            <button onClick={ (e)=> buscaPorID(pesquisa)}> Pesquisar</button>
+
             <h2>Listagem</h2>
 
             {
@@ -119,6 +173,13 @@ export default function Home() {
                                     <td>R$ {i.preco.toFixed(2)}</td>
                                     <td>{i.quantidade}</td>
                                     <td>{ formataData(i.registro) }</td>
+
+                                    <td>
+                                        <button onClick={()=> redirect("/produto/"+i.id)} > Ver </button>
+                                        <button onClick={()=> montaEdicao(i)}> Editar</button>
+                                        <button onClick={()=> removeProduto(i.id) }> Remover</button>
+                                    
+                                    </td>
                                 </tr>
                             )
                         }
@@ -131,15 +192,18 @@ export default function Home() {
 
             <h2>Cadastro</h2>
 
-            <form onSubmit= { (e)=>  insereProduto (e) }>
-                <label> Digite o nome do produto: <br/> <input onChange={(e)=> alteraNome(e.target.value)} /> </label>
+            <form onSubmit= { (e)=>  enviaFormulario (e) }>
+                <label> Digite o nome do produto: <br/> <input onChange={(e)=> alteraNome(e.target.value) } value={nome} /> </label>
                 <br/>
-                <label> Digite o preço: <br/> <input onChange={(e)=> alteraPreco(e.target.value)} /> </label>
+                <label> Digite o preço: <br/> <input onChange={(e)=> alteraPreco(e.target.value) } value={preco}/> </label>
                 <br/>
-                <label> Digite a quantidade: <br/> <input onChange={(e)=> alteraQuantidade(e.target.value)} /> </label>
+                <label> Digite a quantidade: <br/> <input onChange={(e)=> alteraQuantidade(e.target.value)} value={quantidade} /> </label>
                 <br/>
                 <button>Salvar</button>
             </form>
+
+            <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
 
         </div>
     );
